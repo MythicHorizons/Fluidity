@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using System.Collections;
 
 /// <summary>
@@ -9,6 +10,82 @@ public class Cell : MonoBehaviour
     /// <summary>
     /// The current state that this cell is in.
     /// </summary>
-    public CellState state;
+    public CellAnimationState animationState = CellAnimationState.normal;
+
+    /// <summary>
+    /// Whether the cell has been captured by the player.
+    /// </summary>
+    public bool captured = false;
+
+    /// <summary>
+    /// Whether the cell has been captured and enclosed by other captured cells.
+    /// </summary>
+    public bool enclosed = false;
+
+    /// <summary>
+    /// The material that the cell should change to after being captured.
+    /// </summary>
+    public Material targetMaterial;
+
+    public float animateSpeed = 5f;
+
+    public float animateOffset = -1f;
+
+    public float zMagnitude = 1f;
+
+    void Start()
+    {
+        animationState = CellAnimationState.normal;
+        enclosed = false;
+    }
+
+    void Update()
+    {
+        float targetZ = 0;
+        if (animationState == CellAnimationState.hovered)
+        {
+            targetZ = -1f * zMagnitude;
+        }
+        else if (animationState == CellAnimationState.animating)
+        {
+            targetZ = 1f * zMagnitude;
+            if (Math.Abs(transform.position.z - targetZ) < 0.01f)
+            {
+                animationState = CellAnimationState.normal;
+                if (targetMaterial != null)
+                {
+                    GetComponent<Renderer>().material = targetMaterial;
+                    captured = true;
+                }
+            }
+        }
+        if (animateOffset >= 0)
+        {
+            animateOffset -= Time.deltaTime;
+        }
+        else
+        {
+            transform.localPosition = new Vector3(
+                transform.localPosition.x,
+                transform.localPosition.y,
+                Mathf.MoveTowards(transform.localPosition.z, targetZ, animateSpeed * Time.deltaTime));
+        }
+    }
+
+    void OnMouseEnter()
+    {
+        if (animationState == CellAnimationState.normal)
+        {
+            animationState = CellAnimationState.hovered;
+        }
+    }
+
+    void OnMouseExit()
+    {
+        if (animationState == CellAnimationState.hovered)
+        {
+            animationState = CellAnimationState.normal;
+        }
+    }
 
 }

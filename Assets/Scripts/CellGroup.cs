@@ -17,8 +17,11 @@ public class CellGroup
     /// </summary>
     public Cell[] cells { get; private set; }
 
-    public CellGroup(Cell[] cells)
+    public Dictionary<Cell, Cell[]> siblingMap;
+
+    public CellGroup(Cell[] cells, Dictionary<Cell, Cell[]> siblingMap)
     {
         this.cells = cells;
+        this.siblingMap = siblingMap;
     }
 }
