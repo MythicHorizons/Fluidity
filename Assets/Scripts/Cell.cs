@@ -59,6 +59,10 @@ public class Cell : MonoBehaviour
                 }
             }
         }
+        else if(captured)
+        {
+            targetZ = 0.5f;
+        }
         if (animateOffset >= 0)
         {
             animateOffset -= Time.deltaTime;
