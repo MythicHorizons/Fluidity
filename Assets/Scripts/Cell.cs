@@ -7,32 +7,6 @@ using System.Collections;
 /// </summary>
 public class Cell : MonoBehaviour
 {
-    /// <summary>
-    /// The current state that this cell is in.
-    /// </summary>
-    public CellAnimationState animationState = CellAnimationState.normal;
-
-    /// <summary>
-    /// Whether the cell has been captured by the player.
-    /// </summary>
-    public bool captured = false;
-
-    /// <summary>
-    /// Whether the cell has been captured and enclosed by other captured cells.
-    /// </summary>
-    public bool enclosed = false;
-
-    /// <summary>
-    /// The material that the cell should change to after being captured.
-    /// </summary>
-    public Material targetMaterial;
-
-    public float animateSpeed = 5f;
-
-    public float animateOffset = -1f;
-
-    public float zMagnitude = 1f;
-
     void Start()
     {
         animationState = CellAnimationState.normal;
