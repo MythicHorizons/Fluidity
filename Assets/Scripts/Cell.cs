@@ -44,7 +44,15 @@ public class Cell : MonoBehaviour
         float targetZ = 0;
         if (animationState == CellAnimationState.hovered)
         {
-            targetZ = -1f * zMagnitude;
+            if (captured)
+            {
+                targetZ = -0.5f;
+            }
+            else
+            {
+                targetZ = -1f;
+            }
+            targetZ *= zMagnitude;
         }
         else if (animationState == CellAnimationState.animating)
         {
@@ -59,7 +67,7 @@ public class Cell : MonoBehaviour
                 }
             }
         }
-        else if(captured)
+        else if (captured)
         {
             targetZ = 0.5f;
         }
