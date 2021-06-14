@@ -63,7 +63,7 @@ public class Cell : MonoBehaviour
                 if (targetMaterial != null)
                 {
                     GetComponent<Renderer>().material = targetMaterial;
-                    captured = true;
+                    //captured = true;
                 }
             }
         }
@@ -84,9 +84,16 @@ public class Cell : MonoBehaviour
         }
     }
 
+    public void Animate(float animateSpeed=5f, float animateOffset=-1f)
+    {
+        this.animateSpeed = animateSpeed;
+        this.animateOffset = animateOffset;
+        if (this.animationState != CellAnimationState.animating) this.animationState = CellAnimationState.animating;
+    }
+
     void OnMouseEnter()
     {
-        if (animationState == CellAnimationState.normal)
+        if (animationState == CellAnimationState.normal && this.tag == "Paints")
         {
             animationState = CellAnimationState.hovered;
         }
@@ -94,7 +101,7 @@ public class Cell : MonoBehaviour
 
     void OnMouseExit()
     {
-        if (animationState == CellAnimationState.hovered)
+        if (animationState == CellAnimationState.hovered && this.tag == "Paints")
         {
             animationState = CellAnimationState.normal;
         }
