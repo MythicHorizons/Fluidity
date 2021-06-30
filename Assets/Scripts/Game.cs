@@ -13,6 +13,8 @@ public class Game : MonoBehaviour
     /// </summary>
     public TableCellGenerator cellGenerator;
 
+    public LevelLoader levelLoader;
+
     public Camera gameCamera;
     public Canvas popupCanvas;
     public GameObject popupCanvasText;
@@ -71,22 +73,16 @@ public class Game : MonoBehaviour
             RaycastHit info;
             if (Physics.Raycast(ray, out info))
             {
-                Cell hitCell = info.transform.GetComponent<Cell>();
-                if (cellGenerator.generatedGroups[0].cells.All(c => c.animationState == CellAnimationState.normal || c == hitCell))
+                var targetMaterial = info.transform.GetComponent<Renderer>().material;
+                Color CapturedColor = cellGenerator.generatedGroups.First().cells.First().GetComponent<Renderer>().material.color;
+                if (CapturedColor != targetMaterial.color)
                 {
-                    var targetMaterial = info.transform.GetComponent<Renderer>().material;
-                    Color CapturedColor = cellGenerator.generatedGroups.First().cells.First().GetComponent<Renderer>().material.color;
-                    if (CapturedColor != targetMaterial.color)
-                    {
-                        if (isMovesRemainingSet) movesRemaining--;
-                        CheckGameOver();
+                    if (isMovesRemainingSet) movesRemaining--;
 
-                        UpdateGrid(info.transform.position, targetMaterial);
-
-                        UpdateUI();
-
-                        CheckWin();
-                    }
+                    UpdateGrid(info.transform.position, targetMaterial);
+                    CheckGameOver();
+                    CheckWin();
+                    UpdateUI();
                 }
             }
         }
@@ -97,8 +93,10 @@ public class Game : MonoBehaviour
         bool hasAnyCellBeenCaptured = false;
         int initialCellsCaptured = _totalCellsCaptured;
         int groupsCaptured = 0;
-        foreach (Cell c in cellGenerator.generatedGroups[0].cells.Where(c => c.captured))
+        var searchCells = cellGenerator.generatedGroups[0].cells.Where(c => c.captured).ToList();
+        for (int i=0;i < searchCells.Count;i++)
         {
+            Cell c = searchCells[i];
             float dist = Vector3.Distance(c.transform.position, hitPos);
             if (!c.enclosed)
             {
@@ -107,10 +105,12 @@ public class Game : MonoBehaviour
                 bool isGroupCaptured = false;
                 foreach (Cell sibling in siblings.Where(s => !s.captured))
                 {
+                    //Make if statement method CanCaptureCell
                     if (sibling.GetComponent<Renderer>().material.color == targetMaterial.color)
                     {
-                        sibling.targetMaterial = targetMaterial;
-                        sibling.captured = true;
+                        //pass target cell to Capture
+                        sibling.Capture();
+                        searchCells.Add(sibling);
                         _totalCellsCaptured++;
 
                         if (!isGroupCaptured)
@@ -133,9 +133,15 @@ public class Game : MonoBehaviour
                 }
                 c.enclosed = allSame;
             }
-            var animateSpeed = Mathf.Lerp(5f, (cellGenerator.size.x + cellGenerator.size.y)*1.1f + 5f, _totalCellsCaptured / (cellGenerator.size.x * cellGenerator.size.y * .7f));
-            c.Animate(animateSpeed, dist / 30);
-            c.targetMaterial = targetMaterial;
+            var cellColor = c.GetComponent<CellColor>();
+            if (cellColor != null)
+            {
+                var animateSpeed = Mathf.Lerp(5f, (cellGenerator.size.x + cellGenerator.size.y) * 1.1f + 5f, _totalCellsCaptured / (cellGenerator.size.x * cellGenerator.size.y * .7f));
+                Vector3 interpolatedPosition = Vector3.Lerp(Vector3.up, Vector3.forward, animateSpeed);
+                Debug.DrawLine(Vector3.zero, interpolatedPosition, Color.yellow);
+                cellColor.targetMaterial = targetMaterial;
+                cellColor.StartAnimating(animateSpeed, dist / 30);
+            }
         }
 
         //Calculate Score Based on cells Captured
@@ -145,7 +151,6 @@ public class Game : MonoBehaviour
 
     private void UpdateUI()
     {
-        movesRemainingLabel.gameObject.SetActive(isMovesRemainingSet);
         movesRemainingLabel.gameObject.SetActive(isMovesRemainingSet);
 
         scoreTotal.GetComponent<Text>().text = _scoreTotal.ToString();

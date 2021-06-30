@@ -1243,6 +1243,7 @@ GameObject:
   - component: {fileID: 448790433}
   - component: {fileID: 448790432}
   - component: {fileID: 448790431}
+  - component: {fileID: 448790434}
   m_Layer: 0
   m_Name: Environment
   m_TagString: Untagged
@@ -1263,6 +1264,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cellGenerator: {fileID: 448790432}
+  levelLoader: {fileID: 0}
   gameCamera: {fileID: 17821843}
   popupCanvas: {fileID: 185241043}
   popupCanvasText: {fileID: 1045246156}
@@ -1287,8 +1289,8 @@ MonoBehaviour:
   size: {x: 50, y: 50}
   startingPos: {x: 0, y: 0}
   prefabs:
-  - {fileID: 11433364, guid: 77d8a4a579b33a144a09a9cdcef064f7, type: 3}
   - {fileID: 11431490, guid: b202a78de7e1e1941ac33a04f450085f, type: 3}
+  - {fileID: 5322458776131464727, guid: 2deb11022f7cd894bb6805331db048cf, type: 3}
   - {fileID: 11454460, guid: 8641e74577462a14e95e054dae067bb9, type: 3}
 --- !u!4 &448790433
 Transform:
@@ -1304,6 +1306,27 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &448790434
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 448790430}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 356c35dd811b5ea47ab9ed2f6ff61d98, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  LevelDataAsFile: {fileID: 4900000, guid: 5b28469b66ab4d5429c3d31ecd39eb02, type: 3}
+  prefabs:
+  - {fileID: 11454460, guid: 8641e74577462a14e95e054dae067bb9, type: 3}
+  - {fileID: 1935597453697587141, guid: a0d8e10bc82ea0f4eaa040586fdf3bc5, type: 3}
+  - {fileID: 5322458776131464727, guid: 2deb11022f7cd894bb6805331db048cf, type: 3}
+  wallPrefab: {fileID: 3901540596488504449, guid: 226dab81031a1c64c8f5427d88297efe,
+    type: 3}
+  AutoLoadLevelOnStart: 1
+  RandomSeed: 0
 --- !u!1 &534267947
 GameObject:
   m_ObjectHideFlags: 0

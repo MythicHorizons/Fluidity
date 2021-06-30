@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 6521648}
   - component: {fileID: 2379150}
   - component: {fileID: 11433364}
+  - component: {fileID: 114763698201702572}
   m_Layer: 0
   m_Name: Cube
   m_TagString: Paints
@@ -104,10 +105,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c5e9b9654d389994fa2197eec735b39c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  animationState: 0
-  captured: 0
-  enclosed: 0
-  targetMaterial: {fileID: 0}
-  animateSpeed: 5
-  animateOffset: -1
-  zMagnitude: 1
+--- !u!114 &114763698201702572
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 142746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7cf55835feaf33d45b59143e3337a9bf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

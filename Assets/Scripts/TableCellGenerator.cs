@@ -57,7 +57,7 @@ public class TableCellGenerator : MonoBehaviour, ICellGenerator
                 Cell newCell = GenerateCell(x, y, objectsGroup.transform,ref prefab);
                 if (y == startingPos.y && x == startingPos.x)
                 {
-                    newCell.captured = true;
+                    newCell.Capture(false);
                 }
                 cells[(y * xSize) + x] = newCell;
             }
