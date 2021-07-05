@@ -60,10 +60,7 @@ public class Game : MonoBehaviour
         UpdateUI();
 
         CameraVelocity = Vector3.zero;
-        if(levelLoader.MapWidth == 10 && levelLoader.MapHeight == 10)
-        {
-            targetCameraPosition = new Vector3(-.5f, 10.5f, -15f);
-        }
+        targetCameraPosition = new Vector3(-.5f, levelLoader.MapHeight + .5f, levelLoader.MapWidth * -1.5f);
     }
 
     public void UpdateUI()
@@ -117,6 +114,7 @@ public class Game : MonoBehaviour
             {
                 sibling.Capture();
                 CaptureMatchingSiblings(ref info, sibling);
+                if (sibling.enclosed) scoreTotal += 100;
                 levelLoader.Cells[sibling.cellIndex] = sibling;
                 //info.capturedCells.Add(cell);
             }
@@ -209,7 +207,7 @@ public class Game : MonoBehaviour
         if (gameState != GameState.Playing) return;
 
         //Update Camera Position
-        gameCamera.transform.position = Vector3.SmoothDamp(gameCamera.transform.position, targetCameraPosition, ref CameraVelocity, 0.3f);
+        gameCamera.transform.localPosition = Vector3.SmoothDamp(gameCamera.transform.localPosition, targetCameraPosition, ref CameraVelocity, 0.3f);
 
         RaycastHit info;
         if(TryGetRayCastHitOnMouseButtonDown(out info))
@@ -223,7 +221,7 @@ public class Game : MonoBehaviour
 
                 int cellsCaptured, cellsEnclosed = 0;
                 UpdateGrid(info.transform.position, targetMaterial, out cellsCaptured, out cellsEnclosed);
-                scoreTotal += 10 * cellsCaptured + 50 * cellsEnclosed + cellsCaptured;
+                scoreTotal += 10 * cellsCaptured + 45 * cellsEnclosed;
 
                 CheckGameOver();
                 CheckWin();

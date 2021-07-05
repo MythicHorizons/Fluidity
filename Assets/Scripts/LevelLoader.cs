@@ -1,8 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using UnityEditor;
 using UnityEngine;
+#if UNITY_EDITOR
+    using UnityEditor;
+#endif
 
 public class LevelLoader : MonoBehaviour
 {
@@ -35,21 +37,10 @@ public class LevelLoader : MonoBehaviour
     {
         if (string.IsNullOrWhiteSpace(_filePath))
         {
-            //$"{Application.dataPath}/Levels/{fileName}.txt"
-            _filePath = AssetDatabase.GetAssetPath(LevelDataAsFile);
+            _filePath = $"{Application.dataPath}/Levels/{LevelDataAsFile.name}.txt";
         }
 
         return _filePath;
-    }
-
-    public string GetFileName()
-    {
-        if (string.IsNullOrWhiteSpace(_fileName))
-        {
-            _fileName = Path.GetFileName(GetFilePath());
-        }
-
-        return _fileName;
     }
 
     public static class CellType
