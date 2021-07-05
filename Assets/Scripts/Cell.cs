@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using System.Collections;
+using static Game;
 
 /// <summary>
 /// Defines a behavior that represents a cell that can be flooded.
@@ -17,10 +18,17 @@ public class Cell : MonoBehaviour
     /// <summary>
     /// Whether the cell has been captured and enclosed by other captured cells.
     /// </summary>
-    public bool enclosed { get; set; }
+    public bool enclosed { get; private set; }
 
-    public Vector2 CellPos { get; private set; }
-    public void SetCellPos(int posX, int PosY) { CellPos = new Vector2(posX, PosY); }
+    public Vector2 cellPos { get; private set; }
+    public int cellIndex { get; set; }
+    public void SetCellPos(int posX, int PosY) { cellPos = new Vector2(posX, PosY); }
+
+    public bool TryGetCellColor(out CellColor cellColor)
+    {
+        cellColor = GetComponent<CellColor>();
+        return cellColor != null;
+    }
 
     public void Capture(bool sendNotifications = true)
     {
@@ -37,6 +45,15 @@ public class Cell : MonoBehaviour
                 comp.NotifyCapture();
             }
         }
+    }
+
+    public void Enclose()
+    {
+        //No contextual validation here
+
+        enclosed = true;
+
+        //No notification at this time
     }
 
     void Awake()

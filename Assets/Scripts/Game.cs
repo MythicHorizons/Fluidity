@@ -1,180 +1,99 @@
-﻿using UnityEngine;
+﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Defines a class that represents the game.
-/// </summary>
 public class Game : MonoBehaviour
 {
-    /// <summary>
-    /// The array of generators that should be used to generate cells.
-    /// </summary>
-    public TableCellGenerator cellGenerator;
-
     public LevelLoader levelLoader;
 
     public Camera gameCamera;
+    private Vector3 targetCameraPosition;
+    private Vector3 CameraVelocity;
+
+    //Make this section into Prefab with a Manager Script
     public Canvas popupCanvas;
     public GameObject popupCanvasText;
     public GameObject PauseButton;
+
+    //Moves-related objects
     public int movesRemaining;
-    public GameObject movesRemainingLabel;
-    public GameObject movesRemainingDesc;
-    public GameObject scoreTotal;
+    public GameObject movesRemainingTextbox;
 
-    private int _totalCellsCaptured;
-    private int _totalCellsToCapture;
-    private int _scoreTotal;
+    public GameObject scoreTotalTextbox;
+    public GameState gameState { get; private set; }
+
+    public int totalCellsCaptured => levelLoader.Cells.Where(c => c.captured).Count();
+    public int totalCellsEnclosed => levelLoader.Cells.Where(c => c.enclosed).Count();
+    public int totalCellsToCapture => levelLoader.Cells.Where(c => c.canCapture).Count();
+    public int scoreTotal { get; private set; }
     private bool isMovesRemainingSet;
-    private gameState _gameState;
 
-    public enum gameState
+    public enum GameState
     {
         Playing,
         Paused,
         gameOver
     }
 
+    public struct UpdateInfo
+    {
+        public List<Cell> capturedCells { get; set; }
+        public Material targetMaterial { get; set; }
+        public Vector3 hitPos { get; set; }
+    }
+
     void Awake()
     {
         //initialize moves Remaining 
-        isMovesRemainingSet = movesRemaining != 0;
-
-        //Since we have no unfloodable cells...
-        _totalCellsToCapture = (int)(cellGenerator.size.x * cellGenerator.size.y);
-
-        //initialize totals cells Captured
-        _totalCellsCaptured = 1; //we only have one captured cell to start at the moment.
-        //cellGenerator.generatedGroups
-        //    .SelectMany(g => g.cells)
-        //    .GroupBy(g => g)
-        //    .Select(g => g.Count(c => c.captured)).Sum();
+        isMovesRemainingSet = movesRemaining >= 0;
     }
 
+    // Start is called before the first frame update
     void Start()
     {
-        _gameState = gameState.Playing;
+        gameState = GameState.Playing;
         popupCanvas.gameObject.SetActive(false);
 
-        //make first pass at grid with starting captured cells
-        //UpdateGrid(cellGenerator.startingCell.transform.position, cellGenerator.startingCell.targetMaterial);
         UpdateUI();
-    }
 
-    void Update()
-    {
-        if (_gameState != gameState.Playing) return;
-
-        if (Input.GetMouseButtonDown(0))
+        CameraVelocity = Vector3.zero;
+        if(levelLoader.MapWidth == 10 && levelLoader.MapHeight == 10)
         {
-            Ray ray = gameCamera.ScreenPointToRay(Input.mousePosition);
-            RaycastHit info;
-            if (Physics.Raycast(ray, out info))
-            {
-                var targetMaterial = info.transform.GetComponent<Renderer>().material;
-                Color CapturedColor = cellGenerator.generatedGroups.First().cells.First().GetComponent<Renderer>().material.color;
-                if (CapturedColor != targetMaterial.color)
-                {
-                    if (isMovesRemainingSet) movesRemaining--;
-
-                    UpdateGrid(info.transform.position, targetMaterial);
-                    CheckGameOver();
-                    CheckWin();
-                    UpdateUI();
-                }
-            }
+            targetCameraPosition = new Vector3(-.5f, 10.5f, -15f);
         }
     }
 
-    private void UpdateGrid(Vector3 hitPos, Material targetMaterial)
+    public void UpdateUI()
     {
-        bool hasAnyCellBeenCaptured = false;
-        int initialCellsCaptured = _totalCellsCaptured;
-        int groupsCaptured = 0;
-        var searchCells = cellGenerator.generatedGroups[0].cells.Where(c => c.captured).ToList();
-        for (int i=0;i < searchCells.Count;i++)
-        {
-            Cell c = searchCells[i];
-            float dist = Vector3.Distance(c.transform.position, hitPos);
-            if (!c.enclosed)
-            {
-                bool allSame = true;
-                var siblings = cellGenerator.generatedGroups[0].siblingMap[c].ToArray();
-                bool isGroupCaptured = false;
-                foreach (Cell sibling in siblings.Where(s => !s.captured))
-                {
-                    //Make if statement method CanCaptureCell
-                    if (sibling.GetComponent<Renderer>().material.color == targetMaterial.color)
-                    {
-                        //pass target cell to Capture
-                        sibling.Capture();
-                        searchCells.Add(sibling);
-                        _totalCellsCaptured++;
+        movesRemainingTextbox.gameObject.SetActive(isMovesRemainingSet);
 
-                        if (!isGroupCaptured)
-                        {
-                            isGroupCaptured = true;
-                            groupsCaptured++;
-                        }
-
-                        if (!hasAnyCellBeenCaptured)
-                        {
-                            hasAnyCellBeenCaptured = true;
-                            dist = Vector3.Distance(c.transform.position, hitPos);
-                        }
-                    }
-
-                    if (!sibling.captured)
-                    {
-                        allSame = false;
-                    }
-                }
-                c.enclosed = allSame;
-            }
-            var cellColor = c.GetComponent<CellColor>();
-            if (cellColor != null)
-            {
-                var animateSpeed = Mathf.Lerp(5f, (cellGenerator.size.x + cellGenerator.size.y) * 1.1f + 5f, _totalCellsCaptured / (cellGenerator.size.x * cellGenerator.size.y * .7f));
-                Vector3 interpolatedPosition = Vector3.Lerp(Vector3.up, Vector3.forward, animateSpeed);
-                Debug.DrawLine(Vector3.zero, interpolatedPosition, Color.yellow);
-                cellColor.targetMaterial = targetMaterial;
-                cellColor.StartAnimating(animateSpeed, dist / 30);
-            }
-        }
-
-        //Calculate Score Based on cells Captured
-        int cellsCaptured = _totalCellsCaptured - initialCellsCaptured;
-        _scoreTotal += ((isMovesRemainingSet ? movesRemaining : 10) * groupsCaptured) + cellsCaptured;
-    }
-
-    private void UpdateUI()
-    {
-        movesRemainingLabel.gameObject.SetActive(isMovesRemainingSet);
-
-        scoreTotal.GetComponent<Text>().text = _scoreTotal.ToString();
+        scoreTotalTextbox.GetComponent<Text>().text = scoreTotal.ToString();
 
         //If Moves Remaining is set, update text
-        movesRemainingLabel.GetComponent<Text>().text = movesRemaining.ToString();
+        movesRemainingTextbox.GetComponent<Text>().text = movesRemaining.ToString();
     }
-    private void CheckGameOver()
+
+    public void CheckGameOver()
     {
         //This is one possible Game over Scenario
-        if (isMovesRemainingSet && movesRemaining == 0)
+        if (isMovesRemainingSet && movesRemaining <= 0)
         {
-            _gameState = gameState.gameOver;
+            gameState = GameState.gameOver;
             popupCanvasText.GetComponent<Text>().text = "Out Of Moves!";
             popupCanvasText.GetComponent<Text>().color = Color.red;
             popupCanvas.gameObject.SetActive(true);
         }
     }
-    private void CheckWin()
+
+    public void CheckWin()
     {
-        if (_totalCellsCaptured == _totalCellsToCapture)
+        if (totalCellsCaptured == totalCellsToCapture)
         {
-            _gameState = gameState.gameOver;
-            _scoreTotal += movesRemaining * 100;
+            gameState = GameState.gameOver;
+            scoreTotal += movesRemaining * 100;
             UpdateUI();
             popupCanvasText.GetComponent<Text>().text = "You Win!";
             popupCanvasText.GetComponent<Text>().color = Color.green;
@@ -182,9 +101,141 @@ public class Game : MonoBehaviour
         }
     }
 
+    public bool CanCaptureCell(Cell cell, Material targetMaterial)
+    {
+        if (!cell.canCapture || cell.captured) return false;
+        return cell.GetComponent<Renderer>().material.color == targetMaterial.color;
+    }
+
+    public bool CaptureMatchingSiblings(ref UpdateInfo info, Cell cell)
+    {
+        bool allSame = true;
+        var siblings = levelLoader.GetNeighborCells(cell);
+        foreach (Cell sibling in siblings.Where(s => !s.captured))
+        {
+            if (CanCaptureCell(sibling, info.targetMaterial))
+            {
+                sibling.Capture();
+                CaptureMatchingSiblings(ref info, sibling);
+                levelLoader.Cells[sibling.cellIndex] = sibling;
+                //info.capturedCells.Add(cell);
+            }
+
+            if (!sibling.captured && sibling.canCapture)
+            {
+                allSame = false;
+            }
+        }
+
+        if (allSame) cell.Enclose();
+
+        return cell;
+    }
+
+    public float GetAnimateSpeed(UpdateInfo info, Cell cell)
+    {
+        //Calculate AnimationSpeed
+        var initialSpeed = 7f;
+        var animateSpeed = Mathf.Lerp(
+            a: initialSpeed,
+            b: initialSpeed + (levelLoader.MapWidth + levelLoader.MapHeight) * 1.3f,
+            t: totalCellsCaptured / totalCellsToCapture * .7f
+        );
+
+        //Vector3 interpolatedPosition = Vector3.Lerp(Vector3.up, Vector3.forward, animateSpeed);
+        //Debug.DrawLine(Vector3.zero, interpolatedPosition, Color.yellow);
+
+        return animateSpeed;
+    }
+
+    public void UpdateGrid(Vector3 hitPos, Material targetMaterial, out int cellsCaptured, out int cellsEnclosed)
+    {
+        cellsCaptured = 0;
+        cellsEnclosed = 0;
+        if (gameState != GameState.Playing) return; //only Update Grid when game is playing
+
+        //declare variables for updating Grid
+        int initialCellsCaptured = totalCellsCaptured;
+        int initialCellsEnclosed = totalCellsEnclosed;
+        var info = new UpdateInfo()
+        {
+            capturedCells = levelLoader.Cells.Where(c => c.captured).ToList(),
+            targetMaterial = targetMaterial,
+            hitPos = hitPos
+        };
+
+        //loop through grid
+        for(int i=0;i<info.capturedCells.Count();i++)
+        {
+            //declare variables for updating cell
+            Cell cell = info.capturedCells[i];
+            //Update Cell
+            if (!cell.enclosed) //skip cells that are surrounded by captured cells
+            {
+                CaptureMatchingSiblings(ref info, cell);
+            }
+
+            //animate cell coloring
+            CellColor cellColor = cell.GetComponent<CellColor>();
+            if (cellColor != null)
+            {
+                var animateSpeed = GetAnimateSpeed(info, cell);
+                cellColor.targetMaterial = info.targetMaterial;
+
+                float dist = Vector3.Distance(cell.transform.position, info.hitPos);
+                cellColor.StartAnimating(animateSpeed, dist / 30);
+            }
+        }
+
+        //calculate cells captured
+        cellsCaptured = totalCellsCaptured - initialCellsCaptured;
+        cellsEnclosed = totalCellsEnclosed - initialCellsEnclosed;
+    }
+
+    public bool TryGetRayCastHitOnMouseButtonDown(out RaycastHit info)
+    {
+        info = new RaycastHit();
+        if(Input.GetMouseButtonDown(0))
+        {
+            var ray = gameCamera.ScreenPointToRay(Input.mousePosition);
+            return Physics.Raycast(ray, out info);
+        }
+        return false;
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        if (gameState != GameState.Playing) return;
+
+        //Update Camera Position
+        gameCamera.transform.position = Vector3.SmoothDamp(gameCamera.transform.position, targetCameraPosition, ref CameraVelocity, 0.3f);
+
+        RaycastHit info;
+        if(TryGetRayCastHitOnMouseButtonDown(out info))
+        {
+            var targetMaterial = info.transform.GetComponent<Renderer>().material;
+            var targetCanCapture = info.transform.GetComponent<Cell>().canCapture;
+            Material CapturedMaterial = levelLoader.Cells.FirstOrDefault(c => c.captured).GetComponent<Renderer>().material;
+            if (CapturedMaterial != targetMaterial && targetCanCapture)
+            {
+                if (isMovesRemainingSet) movesRemaining--;
+
+                int cellsCaptured, cellsEnclosed = 0;
+                UpdateGrid(info.transform.position, targetMaterial, out cellsCaptured, out cellsEnclosed);
+                scoreTotal += 10 * cellsCaptured + 50 * cellsEnclosed + cellsCaptured;
+
+                CheckGameOver();
+                CheckWin();
+                UpdateUI();
+            }
+        }
+
+    }
+
     public void PauseGame(GameObject ExitButton)
     {
-        _gameState = gameState.Paused;
+        gameState = GameState.Paused;
         PauseButton.SetActive(false);
         popupCanvasText.GetComponent<Text>().text = "Paused";
         popupCanvasText.GetComponent<Text>().color = PauseButton.GetComponentInChildren<Image>().color;
@@ -193,13 +244,12 @@ public class Game : MonoBehaviour
         //NewGameButton.GetComponent<Text>().text = "New Game";
 
         ExitButton.gameObject.SetActive(true);
-
         popupCanvas.gameObject.SetActive(true);
     }
 
     public void ResumeGame(GameObject ExitButton)
     {
-        _gameState = gameState.Playing;
+        gameState = GameState.Playing;
         PauseButton.SetActive(true);
         popupCanvas.gameObject.SetActive(false);
         ExitButton.gameObject.SetActive(false);
