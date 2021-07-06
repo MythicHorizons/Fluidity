@@ -41,8 +41,6 @@ public class TableCellGenerator : MonoBehaviour, ICellGenerator
     /// <returns>Returns a <see cref="CellGroup"/> object that represents the logical grouping of the cells.</returns>
     public CellGroup GenerateCells()
     {
-        //List<GameObject> prefabPaints = prefabs.Where(p => p.tag == "paints").AsEnumerable().Select(p => p.gameObject).ToList();
-        //List<GameObject> prefabObstacles = prefabs.Where(p => p.tag == "obstacles").AsEnumerable().Select(p => p.gameObject).ToList();
         GameObject objectsGroup = new GameObject("Group " + _generatedGroups.Count);
         objectsGroup.transform.parent = this.transform;
         objectsGroup.transform.position = transform.InverseTransformPoint(new Vector3(0, 0));
@@ -59,7 +57,7 @@ public class TableCellGenerator : MonoBehaviour, ICellGenerator
                 Cell newCell = GenerateCell(x, y, objectsGroup.transform,ref prefab);
                 if (y == startingPos.y && x == startingPos.x)
                 {
-                    newCell.captured = true;
+                    newCell.Capture(false);
                 }
                 cells[(y * xSize) + x] = newCell;
             }
